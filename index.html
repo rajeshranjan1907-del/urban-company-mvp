@@ -14,4 +14,58 @@
 <script>
 const form=document.getElementById('issueForm'),out=document.getElementById('guidance');form.addEventListener('submit',e=>{e.preventDefault();const issue=document.getElementById('issue').value,status=document.getElementById('status').value;let msg='';if(issue.includes('cancellation'))msg='Check the latest booking status and available rescheduling options. If the status is unclear, contact the official support channel and keep the booking reference ready.';else if(issue.includes('contact customer'))msg='Use the official in-app Help/Support route for the booking. Keep a short description and relevant booking reference ready; avoid sharing payment credentials.';else if(issue.includes('Professional'))msg='Record the specific service concern and the stage at which it occurred. Request a review through the official support route.';else if(issue.includes('Price'))msg='Review the booking estimate and final invoice. If an amount is unclear, request an itemised explanation through official support.';else msg='Summarise what happened, check the booking details and contact the official support route for the appropriate next step.';out.style.display='block';out.innerHTML='<b>Suggested next step</b><p>'+msg+'</p><span class="muted">Context: '+status+'. Demo guidance only; no case has been created.</span>';});
 document.getElementById('saveCheck').addEventListener('click',()=>{const a=document.getElementById('resolved').value,b=document.getElementById('confidence').value,r=document.getElementById('checkResult');r.style.display='block';r.textContent=a&&b?'Demo feedback recorded on this page: resolution = '+a+'; future booking intention = '+b+'. Nothing has been sent to Urban Company.':'Please select both answers first.';});
+</script><section class="card" style="margin-top:18px">
+  <h2>AI Customer Feedback Analysis</h2>
+  <p>Enter customer feedback to identify problems and product improvements.</p>
+  <textarea id="aiFeedback" rows="4" placeholder="Example: My booking was cancelled and I could not contact customer support."></textarea>
+  <button id="analyseBtn" type="button">Analyse with AI</button>
+  <div id="aiResult" class="result" style="display:none;white-space:pre-wrap"></div>
+</section>
+
+<script>
+document.getElementById('analyseBtn').addEventListener('click', async () => {
+  const feedback = document.getElementById('aiFeedback').value.trim();
+  const result = document.getElementById('aiResult');
+  const button = document.getElementById('analyseBtn');
+
+  if (!feedback) {
+    result.style.display = 'block';
+    result.textContent = 'Please enter customer feedback first.';
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Analysing...';
+  result.style.display = 'block';
+  result.textContent = 'AI is analysing your feedback...';
+
+  try {
+    const response = await fetch(
+      'https://urban-company-ai.rajeshranjan1907.workers.dev/',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.details || data.error || 'Analysis failed');
+    }
+
+    const analysis = data.analysis;
+    const answer = analysis.response ||
+      analysis.choices?.[0]?.message?.content ||
+      'No analysis was returned.';
+
+    result.textContent = answer;
+  } catch (error) {
+    result.textContent = 'Error: ' + error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Analyse with AI';
+  }
+});
 </script></body></html>
